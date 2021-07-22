@@ -59,6 +59,7 @@
 #include "gromacs/mdlib/qm_gaussian.h"
 #include "gromacs/mdlib/qm_mopac.h"
 #include "gromacs/mdlib/qm_orca.h"
+#include "gromacs/mdlib/qm_dp.h"
 #include "gromacs/mdtypes/commrec.h"
 #include "gromacs/mdtypes/forcerec.h"
 #include "gromacs/mdtypes/inputrec.h"
@@ -147,6 +148,10 @@ static real call_QMroutine(const t_commrec gmx_unused *cr, const t_forcerec gmx_
             {
                 return call_orca(fr, qm, mm, f, fshift);
             }
+            else if (GMX_QMMM_DP)
+            {
+                return call_dp(fr, qm, mm, f, fshift);
+            }
             else
             {
                 gmx_fatal(FARGS, "Ab-initio calculation only supported with Gamess, Gaussian or ORCA.");
@@ -185,6 +190,10 @@ static void init_QMroutine(const t_commrec gmx_unused *cr, t_QMrec gmx_unused *q
         else if (GMX_QMMM_ORCA)
         {
             init_orca(qm);
+        }
+        else if (GMX_QMMM_DP)
+        {
+            init_dp(qm);
         }
         else
         {
@@ -574,6 +583,10 @@ void init_QMMMrec(const t_commrec  *cr,
             else if (GMX_QMMM_ORCA)
             {
                 init_orca(qr->qm[0]);
+            }
+            else if (GMX_QMMM_DP)
+            {
+                init_dp(qr->qm[0]);
             }
             else
             {

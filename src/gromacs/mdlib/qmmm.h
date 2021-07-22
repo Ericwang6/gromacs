@@ -41,8 +41,9 @@
 
 #include "gromacs/math/vectypes.h"
 #include "gromacs/mdlib/tgroup.h"
+#include "deepmd/DeepPot.h"
 
-#define GMX_QMMM (GMX_QMMM_MOPAC || GMX_QMMM_GAMESS || GMX_QMMM_GAUSSIAN || GMX_QMMM_ORCA)
+#define GMX_QMMM (GMX_QMMM_MOPAC || GMX_QMMM_GAMESS || GMX_QMMM_GAUSSIAN || GMX_QMMM_ORCA || GMX_QMMM_DP)
 
 struct gmx_localtop_t;
 struct gmx_mtop_t;
@@ -88,6 +89,9 @@ typedef struct {
     ivec               SHbasis;
     int                CASelectrons;
     int                CASorbitals;
+    /* Deep Potential */
+    // deepmd::DeepPot    dp;
+    char              *dp_model_dir;
 } t_QMrec;
 
 typedef struct {

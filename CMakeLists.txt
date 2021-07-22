@@ -274,7 +274,7 @@ gmx_option_multichoice(
     GMX_QMMM_PROGRAM
     "QM package for QM/MM"
     None
-    none gaussian mopac gamess orca)
+    none gaussian mopac gamess orca dp)
 
 gmx_dependent_cache_variable(GMX_SIMD_REF_FLOAT_WIDTH  "Reference SIMD single precision width" STRING "4" "GMX_SIMD STREQUAL REFERENCE")
 gmx_dependent_cache_variable(GMX_SIMD_REF_DOUBLE_WIDTH "Reference SIMD double precision width" STRING "2" "GMX_SIMD STREQUAL REFERENCE")
@@ -730,6 +730,26 @@ elseif(${GMX_QMMM_PROGRAM} STREQUAL "GAMESS")
     set(GMX_QMMM_GAMESS 1)
 elseif(${GMX_QMMM_PROGRAM} STREQUAL "ORCA")
     set(GMX_QMMM_ORCA 1)
+# DeepMD
+elseif(${GMX_QMMM_PROGRAM} STREQUAL "DP")
+    message(STATUS "Compling with DeepMD...")
+    add_definitions(-w) # close warning
+    set(GMX_QMMM_DP 1)
+    include_directories(${GMX_DEEPMD_ROOT}/include)
+    include_directories(${GMX_TENSORFLOW_ROOT}/include)
+    link_directories(${GMX_DEEPMD_ROOT}/lib)
+    link_directories(${GMX_TENSORFLOW_ROOT}/lib)
+    # define high precision
+    add_definitions("-D HIGH_PREC")
+    # ensure all dynamic libraries linked
+    set (CMAKE_EXE_LINKER_FLAGS "-Wl,--no-as-needed")
+    # add link libraries
+    list (APPEND GMX_PUBLIC_LIBRARIES deepmd_op)
+    list (APPEND GMX_PUBLIC_LIBRARIES deepmd_op_cuda)
+    list (APPEND GMX_PUBLIC_LIBRARIES deepmd)
+    list (APPEND GMX_PUBLIC_LIBRARIES deepmd_cc)
+    list (APPEND GMX_PUBLIC_LIBRARIES tensorflow_cc)
+    list (APPEND GMX_PUBLIC_LIBRARIES tensorflow_framework)
 elseif(${GMX_QMMM_PROGRAM} STREQUAL "NONE")
     # nothing to do
 else()

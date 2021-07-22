@@ -192,6 +192,9 @@
 /* Use ORCA for QM-MM calculations */
 #cmakedefine01 GMX_QMMM_ORCA
 
+/* Use DeepPotential for QM-MM calculations */
+#cmakedefine01 GMX_QMMM_DP
+
 /* Use cycle counters */
 #cmakedefine01 GMX_CYCLECOUNTERS
 
