@@ -149,10 +149,87 @@
 #    include "corewrap.h"
 #endif
 
+/* DeepMD */
+#include <iostream>
+#include <fstream>
+#include "deepmd/DeepPot.h"
+#include "json.hpp"
+const float e_dp2gmx = 96.487;
+const float f_dp2gmx = 964.87;
+const float c_dp2gmx = 0.1;
+/* DeepMD */
+
 using gmx::SimulationSignaller;
 
 void gmx::LegacySimulator::do_md()
 {
+    /**********DeePMD**********/
+    bool deepmd = false;
+    float lmd = 1.0;
+    std::ifstream fp ("input.json");
+    int natom;
+    std::vector<double > dbox;
+    std::vector<int > dtype;
+    std::vector<int > dind;
+    std::vector<double > dcoord;
+    double dener;
+    std::vector<double > dforce;
+    std::vector<double > dvirial;
+    deepmd::DeepPot nnp;
+
+    if (fp.is_open()) {
+        deepmd = true;
+        nlohmann::json jdata;
+        fp >> jdata;
+        std::cout << "# using data base" << std::endl;
+        std::cout << setw(4) << jdata << std::endl;
+        std::string graph_file = jdata["graph_file"];
+        std::string type_file = jdata["type_file"];
+        std::string index_file = jdata["index_file"];
+        lmd = jdata["lambda"];
+        std::cout << "Lambda: " << lmd << std::endl;
+
+        std::string line;
+        std::istringstream iss;
+        real val;
+
+        std::ifstream ft (type_file);
+        if (!ft.is_open()) {
+            cerr << "Type file not found!" << endl;
+            exit(1);
+        }
+        getline(ft, line);
+        iss.clear();
+        iss.str(line);
+        while (iss >> val) {
+            dtype.push_back(val);
+        }
+        natom = dtype.size();
+        std::cout << "Number of atoms:" << natom << std::endl;
+
+        std::ifstream fi (index_file);
+        if (!fi.is_open()) {
+            std::cerr << "Index file not found!" << std::endl;
+            exit(1);
+        }
+        getline(fi, line);
+        iss.clear();
+        iss.str(line);
+        while (iss >> val) {
+            dind.push_back(val);
+        }
+
+        dbox.resize(9);
+        dcoord.resize(natom * 3);
+        dforce.resize(natom * 3);
+        dvirial.resize (9);
+        std::cout << "Begin Init model: " << graph_file << std::endl;
+        nnp.init (graph_file);
+        std::cout << "Successfully load model!" << std::endl;
+
+    }
+    /**********DeePMD**********/
+
     // TODO Historically, the EM and MD "integrators" used different
     // names for the t_inputrec *parameter, but these must have the
     // same name, now that it's a member of a struct. We use this ir
@@ -960,6 +1037,52 @@ void gmx::LegacySimulator::do_md()
                      f.arrayRefWithPadding(), force_vir, mdatoms, enerd, fcd, state->lambda, graph,
                      fr, runScheduleWork, vsite, mu_tot, t, ed ? ed->getLegacyED() : nullptr,
                      (bNS ? GMX_FORCE_NS : 0) | force_flags, ddBalanceRegionHandler);
+            
+            /**********DeePMD**********/
+            if (deepmd) {
+
+                for (int ii = 0; ii < natom; ii++) {
+                    for (int dd = 0; dd < DIM; dd++) {
+                        dcoord[ii*DIM+dd] = state->x.rvec_array()[dind[ii]][dd] / c_dp2gmx;
+                    }
+                }
+                for (int bi = 0; bi < 3; bi++) {
+                    for (int bj = 0; bj < 3; bj++) {
+                        dbox[bi*3+bj] = state->box[bi][bj] / c_dp2gmx;
+                    }
+                }
+
+                nnp.compute (dener, dforce, dvirial, dcoord, dtype, dbox);
+
+                /* debugger */
+                // std::cout << "# Step is " << step << std::endl;
+                // std::cout << "# Box: " << std::endl;
+                // for (int bi = 0; bi < 3; bi++) {
+                //     std::cout << "# ";
+                //     for (int bj = 0; bj < 3; bj++) {
+                //         std::cout << std::fixed << std::setprecision(6) << dbox[bi*3+bj] << " ";
+                //     }
+                //     std::cout << std::endl;
+                // }
+                // std::cout << "# Coords: " << std::endl;
+                // for (int ii = 0; ii < natom; ii++) {
+                //     for (int dd = 0; dd < 3; dd++) {
+                //         std::cout << std::fixed << std::setprecision(6) << dcoord[ii * 3 + dd] << " ";
+                //     }
+                //     std::cout << std::endl;
+                // }
+                // std::cout << "# Ori energy: " << enerd->term[F_EPOT] << " kJ/mol" << std::endl;
+                // std::cout << "# DP energy: " << std::fixed << std::setprecision(6) << dener << " eV" << std::endl;
+                /* debugger */
+
+                enerd->term[F_EPOT] += dener * e_dp2gmx * lmd;
+                for (int ii = 0; ii < natom; ii++) {
+                    for (int dd = 0; dd < DIM; dd++) {
+                        f.rvec_array()[dind[ii]][dd] += dforce[ii*DIM+dd] * f_dp2gmx * lmd;
+                    }
+                }
+            }
+          /**********DeePMD**********/
         }
 
         // VV integrators do not need the following velocity half step

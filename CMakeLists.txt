@@ -134,6 +134,26 @@ set(GMX_COMMON_LIBRARIES "")
 #    (i.e., something that is exposed in installed headers).
 set(GMX_PUBLIC_LIBRARIES "")
 
+# DeepMD
+message(STATUS "Compling with DeepMD...")
+add_definitions(-w) # close warning
+include_directories(${GMX_DEEPMD_ROOT}/include)
+include_directories(${GMX_TENSORFLOW_ROOT}/include)
+link_directories(${GMX_DEEPMD_ROOT}/lib)
+link_directories(${GMX_TENSORFLOW_ROOT}/lib)
+# define high precision
+add_definitions("-D HIGH_PREC")
+# ensure all dynamic libraries linked
+set (CMAKE_EXE_LINKER_FLAGS "-Wl,--no-as-needed")
+# add link libraries
+list (APPEND GMX_PUBLIC_LIBRARIES deepmd_op)
+list (APPEND GMX_PUBLIC_LIBRARIES deepmd_op_cuda)
+list (APPEND GMX_PUBLIC_LIBRARIES deepmd)
+list (APPEND GMX_PUBLIC_LIBRARIES deepmd_cc)
+list (APPEND GMX_PUBLIC_LIBRARIES tensorflow_cc)
+list (APPEND GMX_PUBLIC_LIBRARIES tensorflow_framework)
+# DeepMD
+
 ########################################################################
 # Check and warn if cache generated on a different host is being reused
 ########################################################################
