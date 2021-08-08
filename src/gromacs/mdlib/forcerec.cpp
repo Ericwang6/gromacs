@@ -98,6 +98,8 @@
 #include "gromacs/utility/smalloc.h"
 #include "gromacs/utility/strconvert.h"
 
+#include "gromacs/mdlib/deepmd_plugin.h"
+
 /*! \brief environment variable to enable GPU P2P communication */
 static const bool c_enableGpuPmePpComms =
         (getenv("GMX_GPU_PME_PP_COMMS") != nullptr) && GMX_THREAD_MPI && (GMX_GPU == GMX_GPU_CUDA);
@@ -1491,6 +1493,7 @@ void init_forcerec(FILE*                            fp,
     {
         fr->pmePpCommGpu = std::make_unique<gmx::PmePpCommGpu>(cr->mpi_comm_mysim, cr->dd->pme_nodeid);
     }
+    init_deepmd();
 }
 
 t_forcerec::t_forcerec() = default;
