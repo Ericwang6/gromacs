@@ -1,10 +1,10 @@
 # GROMACS + DeepMD NNP/MM Simulations
-This README is drafted by Yingze Wang from CCME, Peking University.
+This README is drafted by Yingze Wang from CCME, Peking University and it is about how to run NNP/MM simulations using GROMACS + DeepMD. It is assumed that you have already known some basic usage of GROMACS, if not, please first refer to http://www.mdtutorials.com/gmx/ to follow some tutorials.
 
 ## Installation
 1. Download code from https://github.com/Ericwang6/gromacs/tree/deepmd-v3
 2. Install C++ api of both `tensorflow 2.x` and `deepmd-kit 2.x`.
-3. Specify the installation path of tensorflow and deepmd using cmake options: `-DTENSORFLOW_ROOT` and `-DDEEPMD_ROOT`. Here is a sample compile scipt:
+3. Specify the installation path of tensorflow and deepmd using cmake options: `-DGMX_TENSORFLOW_ROOT` and `-DGMX_DEEPMD_ROOT`. Here is a sample compile scipt:
 ```bash
 #!/bin/bash
 export CC=/usr/bin/gcc
@@ -24,7 +24,7 @@ cmake3 .. -DCMAKE_CXX_STANDARD=14 \ # not required, but c++14 seems to be more c
 make -j
 make install
 ```
-+ Tips: C++ api of deepmd and tensorflow could be easily installed from the deepmd-kit offline packages, but before using tensorflow, one need to manually change the `protobuf` package to version 3.9.2 (the offline package will install a version of 3.14, which will cause incompability).
++ Tips: C++ api of deepmd and tensorflow could be easily installed from the [deepmd-kit offline packages](https://github.com/deepmodeling/deepmd-kit/releases), but before using tensorflow, one need to manually change the `protobuf` package to version 3.9.2 (the offline package will install a version of 3.14, which will cause incompability).
 
 ## Usage
 ### 1. Topology Preparation
@@ -183,7 +183,7 @@ Finally, you can run GROMACS using `gmx mdrun` as usual.
 
 ## For Developers
 + `src/gromacs/mdlib/deepmd_plugin.cpp` : deepmd-plugin definitions
-+ `src/gromacs/mdlib/sim_utils.cpp` : force and energy calculations of DeepMD in `do_force` function (https://github.com/Ericwang6/gromacs/blob/4d695074a04cf12f6aee50b8e465696c067957ba/src/gromacs/mdlib/sim_util.cpp#L1845-L1929)
++ `src/gromacs/mdlib/sim_utils.cpp` : [force and energy calculations of DeepMD](https://github.com/Ericwang6/gromacs/blob/4d695074a04cf12f6aee50b8e465696c067957ba/src/gromacs/mdlib/sim_util.cpp#L1845-L1929) in `do_force` function 
 + `src/gromacs/mdlib/forcerec.cpp` : deepmd-plugin init
 
 
