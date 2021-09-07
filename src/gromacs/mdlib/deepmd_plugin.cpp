@@ -50,7 +50,7 @@ void init_deepmd () {
             /* pbc */
             if (jdata.contains("pbc"))
             {
-                pbc = jdata['pbc'];
+                pbc = jdata["pbc"];
             }
             else
             {
